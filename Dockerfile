@@ -67,6 +67,7 @@ RUN set -ex \
     && wget -q https://github.com/mirror/mingw-w64/commit/6a0e9165008f731bccadfc41a59719cf7c8efc02.patch -O - | \
         patch -d mingw-w64-v${MINGW_VERSION} -p 1 \
     \
+    && wget -q https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz -O - | tar -xz \
     && mkdir -p ${MINGW}/include ${MINGW}/lib/pkgconfig \
     && chmod 0777 -R /mnt ${MINGW} \
     \
@@ -170,12 +171,19 @@ RUN set -ex \
     && make install \
     && cd .. \
     \
+    && cd boost_1_76_0 \
+    && echo "using gcc :  : x86_64-w64-mingw32-g++ ;" > user-config.jam \
+    && ./bootstrap.sh \
+    && ./b2 --user-config=./user-config.jam --prefix=/usr/local target-os=windows address-model=64 variant=release install \
+    && cd .. \
+    \
     && rm -r pkg-config-${PKG_CONFIG_VERSION} \
     && rm -r cmake-${CMAKE_VERSION} \
     && rm -r binutils-${BINUTILS_VERSION} \
     && rm -r mingw-w64 mingw-w64-v${MINGW_VERSION} \
     && rm -r gcc gcc-${GCC_VERSION} \
     && rm -r nasm-${NASM_VERSION} \
+    && rm -r boost_1_76_0 \
     \
     && apt-get remove --purge -y file gcc-10 g++-10 zlib1g-dev libssl-dev libgmp-dev libmpfr-dev libmpc-dev libisl-dev python-lxml python-mako \
     \
